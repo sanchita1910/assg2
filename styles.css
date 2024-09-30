@@ -1,27 +1,35 @@
 body { 
-    font-family: Arial, sans-serif; 
+    font-family: Arial, sans-serif;
+    background-color:#f4f4f4; 
+    align-content: center; 
 }
 .container { 
-    max-width: 600px; 
+    max-width: 550px; 
     margin: 20px auto; 
     /* padding: 20px;  */
-    background-color: #f4f4f4; 
-    border-radius: 8px; 
+    background-color: white; 
+    border-radius: 0px; 
+    border: 1.5px solid #ccc;
+    border-bottom: 2px solid #ccc;
 }
 
-h1 { 
+.h1 { 
     text-align: left; 
     padding-top: 10px;
-    color: grey;
+    color: rgb(80, 80, 80);
     padding-left: 10px;
     font-size: 20px;
+    font-family: 'Open Sans', sans-serif;
+    margin-top: 21px;
+    font-weight: bold;
 }
-h3 { 
+.h3 { 
     text-align: left; 
     padding-top: 10px;
-    color: grey;
+    color: rgb(111, 110, 110);
     padding-left: 10px;
-    font-size: 17px;
+    font-size: 16px;
+    font-family: 'Open Sans', sans-serif;
 }
 form { 
     margin-bottom: 20px; 
@@ -36,6 +44,10 @@ input[type="text"], select, button {
 
 #result { 
     margin-top: 20px; 
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
 }
 .card { 
     padding: 20px; 
@@ -44,7 +56,7 @@ input[type="text"], select, button {
     margin-bottom: 10px; 
     border-radius: 8px; 
 }
-table { 
+/* table { 
     width: 100%; 
     border-collapse: collapse; 
 }
@@ -52,7 +64,7 @@ th, td {
     padding: 10px; 
     border: 1px solid #ccc; 
     text-align: center; 
-}
+} */
 .button-container{
     display: flex;
     justify-content: space-between;
@@ -61,19 +73,23 @@ th, td {
     margin-right: 250px;
 }
 #submit-btn {
-    background-color: #007bff;
+    background-color: #368deaed;
     color: white;
     border: none;
     width: 100%;
+    border-bottom: 3px solid #0f58a7;
 }
 #clear-btn {
     background-color: #f0ad4e;
     color: white;
     border: none;
     width: 100%;
+    border-bottom: 3px solid #eaa13c;
 }
 label {
-    font-weight: bold;
+    /* font-weight: bold; */
+    font-family: 'Open Sans', sans-serif;
+    color: rgb(34, 127, 214);
 }
 .required {
     color: red;
@@ -88,10 +104,30 @@ label {
     gap: 50px;
 }
 #state{
-    width: 300px;
+    width: 258px;
+    margin-right: 157px;
+    font-size: 13px;
 }
 #street-field{
-    width: 535px;
+    width: 480px;
+    height: 7px;
+}
+.street{
+    color:grey;
+    margin-top: 6px;
+}
+.city-field{
+    margin-top: 6px;
+    height: 7px;
+}
+
+.state-field{
+    height: 25px;
+    background-color: rgb(219 216 216);
+    /* border-radius: 10px; */
+    margin-top: 6px;
+    padding: 0px;
+    padding-left: 7px;
 }
 #weather-form{
     margin-right: 20px;
@@ -104,3 +140,170 @@ label {
     position: relative;
     overflow: hidden;
 }
+
+/* Inner HTML code */
+
+.weather-card {
+    border: 1px solid #ccc;
+    padding: 20px;
+    text-align: left;
+    font-family: 'Open Sans', sans-serif;
+    width: 600px;
+    background-color: #f9f9f9;
+    margin-top: 27px;
+    /* margin-left: 360px; */
+}
+
+.main-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.temperature {
+    font-size: 90px;
+    color: grey;
+    font-family: 'Open Sans', sans-serif;
+    margin-right: 60px;
+}
+
+.icon-img{
+    width: 90px;
+    height: 100px;
+}
+
+.condition {
+    font-size: 24px;
+    color: #555;
+}
+
+.details {
+    /* display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px; */
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+}
+
+.detail-item {
+    /* display: flex;
+    flex-direction: column;
+    align-items: center; */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 16%;
+}
+
+.detail-label {
+    font-size: 14px;
+    color: #777;
+}
+
+.detail-value {
+    font-size: 16px;
+    /* font-weight: bold; */
+    color: #706f6f;
+}
+.detail-img{
+    width: 35px;
+    height: 35px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+.place{
+    font-size: 22px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+    color: #777;
+    font-family: 'Open Sans', sans-serif;
+}
+.icon-desc{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/* table css */
+/* Forecast Table Styling */
+.forecast-table {
+    width: 750px;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.forecast-table th {
+    background-color: #1d5eb3c8;
+    color: rgb(13, 13, 13);
+    padding: 8px;
+    text-align: center;
+    /* border: 1px solid #ccc; */
+    border: none;
+    font-weight: normal;
+}
+
+.forecast-table td {
+    padding: 8px;
+    border: 1px solid #ccc;
+    text-align: center;
+    border-top: none;
+    border-right: none;
+    border-left: none;
+}
+.forecast-table td:first-child {
+    padding: 8px;
+    border: 1px solid #ccc;
+    text-align: center;
+    border-top: none;
+    border-right: none;
+    border-left: grey;
+}
+.weather-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.weather-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 5px;
+}
+
+.weather-table{
+    margin-top: 10px;
+}
+
+.weather-table-row{
+    height: 40px;
+    margin: 2px;
+}
+.weather-data-row{
+    height: 60px;
+}
+.status{
+    display: flex;
+    flex-direction: row;
+}
+
+.status-img{
+    width: 60px;
+    height: 60px;
+}
+.status-desc{
+    font-size: 13px;
+    margin-left: 5px;
+}
+.status-container {
+    display: flex;
+    align-items: center; 
+    justify-content: flex-start; 
+}
+/* Optional: You can add a hover effect for better readability */
+.forecast-table tr:hover {
+    background-color: #f2f2f2;
+}
+

@@ -82,89 +82,7 @@
             stateFieldSelect.setAttribute('required', 'required');
         }
     });
-  
-// Function to handle the Submit button click
-    submitButton.addEventListener('click', function() {
 
-        // Clear any previous custom validation
-        streetFieldInput.setCustomValidity("");
-        cityFieldInput.setCustomValidity("");
-        stateFieldSelect.setCustomValidity("");
-
-        // If the location checkbox is checked, use the user's location
-        if (useLocationCheckbox.checked) {
-            debugger
-            fetch(`https://ipinfo.io/json?token=${ipinfoApiToken}`)
-                .then(response => response.json())
-                .then(data => {
-                    const loc = data.loc.split(',');
-                    const lat = loc[0];
-                    const lon = loc[1];
-                    // Send lat/lon to the backend
-                    fetchWeatherFromBackend(lat, lon);
-                })
-                .catch(error => {
-                    alert("Error fetching geolocation. Please try again.");
-                    console.error('Error:', error);
-                    console.log(lat,lon,loc);
-                });
-        } else {
-            // Validate the form fields
-            // if (!streetFieldInput.value || !cityFieldInput.value || !stateFieldSelect.value) {
-            //     // Show error tooltips
-            //     if (!streetFieldInput.value) streetFieldInput.setCustomValidity("Please fill out this field.");
-            //     if (!cityFieldInput.value) cityFieldInput.setCustomValidity("Please fill out this field.");
-            //     if (!stateFieldSelect.value) stateFieldSelect.setCustomValidity("Please select a state.");
-            //     return;
-            // } 
-        //     
-        
-        // Validate the form fields
-        let valid = true;
-        if (!streetFieldInput.value) {
-            streetFieldInput.setCustomValidity("Please fill out this field.");
-            valid = false;
-        }
-        if (!cityFieldInput.value) {
-            cityFieldInput.setCustomValidity("Please fill out this field.");
-            valid = false;
-        }
-        if (!stateFieldSelect.value) {
-            stateFieldSelect.setCustomValidity("Please select a state.");
-            valid = false;
-        }
-
-        // Show tooltips if validation fails
-        if (!valid) {
-            streetFieldInput.reportValidity();
-            cityFieldInput.reportValidity();
-            stateFieldSelect.reportValidity();
-            return;
-        }
-
-        // If valid, use Google Geocoding API to get lat/lon
-        const address = `${streetFieldInput.value}, ${cityFieldInput.value}, ${stateFieldSelect.value}`;
-        const googleGeocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${googleApiKey}`;
-        
-        fetch(googleGeocodeUrl)
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'OK') {
-                    const lat = data.results[0].geometry.location.lat;
-                    const lon = data.results[0].geometry.location.lng;
-                    // Send lat/lon to the backend
-                    fetchWeatherFromBackend(lat, lon);
-                } else {
-                    alert("Geocoding failed. Please check the address.");
-                }
-            })
-            .catch(error => {
-                alert("Error fetching coordinates. Please try again.");
-                console.error('Error:', error);
-            });
-        }
-    });
-    
 // Function to handle the Clear button click
     clearButton.addEventListener('click', function() {
         // Clear the form fields
@@ -186,38 +104,209 @@
         resultDiv.innerHTML = '';
     });
 
- // Function to call the Flask backend and fetch weather data
-  function fetchWeatherFromBackend(lat, lon) {
-    const apiUrl = `http://localhost:5000/weather?lat=${lat}&lon=${lon}`;
-    // Make a GET request to the backend with lat and lon
-    fetch(apiUrl, {
-        method: 'GET', // Explicitly specifying GET
-        headers: {
-            'Content-Type': 'application/json'  // Optionally specify content type
+// Function to handle the Submit button click
+submitButton.addEventListener('click', function(event) {
+    event.preventDefault(); // Prevent form from submitting traditionally
+
+    // Clear previous validation errors
+    streetFieldInput.setCustomValidity("");
+    cityFieldInput.setCustomValidity("");
+    stateFieldSelect.setCustomValidity("");
+
+    // Prepare data to send to the Flask backend
+    let useLocation = useLocationCheckbox.checked;
+    let valid = true;
+
+    // If the location checkbox is unchecked, validate the input fields
+    if (!useLocation) {
+        if (!streetFieldInput.value) {
+            streetFieldInput.setCustomValidity("Please fill out this field.");
+            valid = false;
         }
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Clear the previous results
-            resultDiv.innerHTML = '';
-            
-            // Display the weather information
-            if (data.error) {
-                resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
-            } else {
-                resultDiv.innerHTML = `
-                    <div class="card">
-                        <h2>Weather Information for ${data.location}</h2>
-                        <p>Temperature: ${data.temperature} °F</p>
-                        <p>Humidity: ${data.humidity}%</p>
-                        <p>Pressure: ${data.pressure} hPa</p>
-                        <p>Wind Speed: ${data.windSpeed} mph</p>
+        if (!cityFieldInput.value) {
+            cityFieldInput.setCustomValidity("Please fill out this field.");
+            valid = false;
+        }
+        if (!stateFieldSelect.value) {
+            stateFieldSelect.setCustomValidity("Please select a state.");
+            valid = false;
+        }
+
+        // Show validation errors if the form is invalid
+        if (!valid) {
+            streetFieldInput.reportValidity();
+            cityFieldInput.reportValidity();
+            stateFieldSelect.reportValidity();
+            return;
+        }
+    }
+
+    // Prepare query parameters
+    const params = new URLSearchParams({
+        useLocation: useLocation.toString(),
+        street: streetFieldInput.value,
+        city: cityFieldInput.value,
+        state: stateFieldSelect.value
+    });
+   
+
+    // Function to Send the data to the Flask backend
+    fetch(`http://127.0.0.1:5000/weather?${params.toString()}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Clear previous results
+        resultDiv.innerHTML = '';
+
+        if (data.error) {
+            resultDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+
+            //remove this later 
+            console.log(params);
+        } else {
+
+            resultDiv.innerHTML = `
+    
+                <div class="weather-card">
+                    <div class="place">${data.location}</div>
+                    <div class="main-info">
+                    <div class="icon-desc">
+                    <div>
+                    <image class="icon-img" src="${data.current.weathericonlocation}"> </image>
                     </div>
+                    <div class="condition">${data.current.weatherDescription}</div>
+                    </div>
+                    <div class="temperature">
+                            <span class="temp-value">${data.current.temperature.toFixed(1)}</span>°
+                        </div>
+                    </div>
+                    <div class="details">
+                        <div class="detail-item">
+                            <span class="detail-label">Humidity</span>
+                            <image class="detail-img" src="Images/humidity.png"> </image>
+                            <span class="detail-value">${data.current.humidity}%</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Pressure</span>
+                            <image class="detail-img" src="Images/Pressure.png"> </image>
+                            <span class="detail-value">${data.current.pressure.toFixed(2)}inHg</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Wind Speed</span>
+                            <image class="detail-img" src="Images/Wind_Speed.png"> </image>
+                            <span class="detail-value">${data.current.windSpeed.toFixed(2)}mph</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Visibility</span>
+                            <image class="detail-img" src="Images/Visibility.png"> </image>
+                            <span class="detail-value">${data.current.visibility}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Cloud Cover</span>
+                            <image class="detail-img" src="Images/Cloud_Cover.png"> </image>
+                            <span class="detail-value">${data.current.cloudCover}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">UV Level</span>
+                            <image class="detail-img" src="Images/UV_Level.png"> </image>
+                            <span class="detail-value">${data.current.uvIndex}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            let dailyForecastTable = `
+            <div class="weather-table">
+                <table class="forecast-table">
+                    <thead>
+                        <tr class="weather-table-row">
+                            <th>Date</th>
+                            <th> Status</th>
+                            <th> Temp High</th>
+                            <th> Temp Low</th>
+                            <th>Wind Speed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                </div>
+            `;
+
+            data.daily_forecast.forEach((day, index) => {
+                const date = new Date(day.date);
+                
+                // Format the date to "Monday, 09 September 2024"
+                const formattedDate = date.toLocaleDateString('en-US', {
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long',  
+                    day: '2-digit'   
+                });
+                dailyForecastTable += `
+                    <tr class="weather-data-row" onClick="displayWeatherCard(${index}, JSON.stringify(day))">
+                        <td>${formattedDate}</td>
+                        <td> 
+                        <div class="status-container">
+                            <image class="status-img" src="${data.current.weathericonlocation}"> </image>
+                                <div class="status-desc">
+                                ${day.weatherDescription}
+                                </div>
+                        </div>
+                        </td>   
+                        <td>${day.temperature_high.toFixed(1)}</td>
+                        <td>${day.temperature_low.toFixed(1)}</td>
+                        <td>${day.windSpeed.toFixed(1)}</td>                     
+                    </tr>
                 `;
-            }
-        })
-        .catch(error => {
-            alert("Error fetching weather data. Please try again.");
-            console.error('Error:', error);
-        });
+            });
+
+            dailyForecastTable += `
+                    </tbody>
+                </table>
+            `;
+
+            resultDiv.innerHTML += dailyForecastTable;
+        }
+    })
+    .catch(error => {
+        alert("Error fetching weather data. Please try again.");
+        console.error('Error:', error);
+    });
+});
+
+ // Function to display the weather card
+ function displayWeatherCard(index, data) {
+    const selectedDay = data.daily_forecast[index];  // Retrieve the corresponding day using the index
+
+    // Create the card for the selected day's weather
+    const forecastCard = `
+        <div class="weather-card">
+            <div class="place">${data.location} - Forecast for ${new Date(selectedDay.date).toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: '2-digit'})}</div>
+            <div class="main-info">
+                <div class="icon-desc">
+                    <div>
+                        <img class="icon-img" src="${selectedDay.weathericonlocation}"> <!-- Use the correct daily forecast icon -->
+                    </div>
+                    <div class="condition">${selectedDay.weatherDescription}</div>
+                </div>
+                <div class="temperature">
+                    <span class="temp-value">${selectedDay.temperature_high.toFixed(1)}</span>° / 
+                    <span class="temp-value">${selectedDay.temperature_low.toFixed(1)}</span>°
+                </div>
+            </div>
+            <div class="details">
+                <div class="detail-item">
+                    <span class="detail-label">Wind Speed</span>
+                    <img class="detail-img" src="Images/Wind_Speed.png"> 
+                    <span class="detail-value">${selectedDay.windSpeed.toFixed(2)} mph</span>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // Add the forecast card to the forecastCardsContainer
+    document.getElementById('forecastCardsContainer').innerHTML += forecastCard;
 }
