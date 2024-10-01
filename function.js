@@ -140,6 +140,7 @@ submitButton.addEventListener('click', function(event) {
             return;
         }
     }
+    fetchWeather(useLocation, streetFieldInput.value, cityFieldInput.value, stateFieldSelect.value);
 
     // Prepare query parameters
     const params = new URLSearchParams({
@@ -150,7 +151,10 @@ submitButton.addEventListener('click', function(event) {
     });
    
 
-    // Function to Send the data to the Flask backend
+  // Function to send data to Flask backend
+    function fetchWeatherData(lat, lon, street, city, state, useLocation) {
+    const params = new URLSearchParams({ lat, lon, street, city,state });
+
     fetch(`http://127.0.0.1:5000/weather?${params.toString()}`, {
         method: 'GET',
         headers: {
@@ -278,6 +282,69 @@ submitButton.addEventListener('click', function(event) {
         alert("Error fetching weather data. Please try again.");
         console.error('Error:', error);
     });
+}
+
+// Function to get location using IPInfo API
+function getLocationByIPInfo() {
+    const ipinfoToken = "8e9152548058e9";
+    return fetch(`https://ipinfo.io/?token=${ipinfoToken}`)
+        .then(response => response.json())
+        .then(data => {
+            const [lat, lon] = data.loc.split(',');
+            return { lat, lon };
+        })
+        .catch(error => {
+            console.error('Error fetching location from IPInfo:', error);
+            throw new Error('Unable to fetch location.');
+        });
+}
+
+// Function to get coordinates using Google Geocoding API
+function getLocationByAddress(street, city, state) {
+    const googleApiKey = "AIzaSyB32ZyEKGCtbQ3ljMmb_ieZdMZhBXHZ8IA";
+    const address = `${street}, ${city}, ${state}`;
+    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}&key=${googleApiKey}`;
+    
+    return fetch(geocodeUrl)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== 'OK') {
+                throw new Error('Geocoding failed. Check your address.');
+            }
+            const { lat, lng } = data.results[0].geometry.location;
+            return { lat, lon: lng };
+        })
+        .catch(error => {
+            console.error('Error fetching location from Google Geocoding:', error);
+            throw new Error('Unable to fetch location from address.');
+        });
+}
+
+
+
+// Function to handle location-based weather fetching
+function fetchWeather(useLocation, street, city, state) {
+
+    if (useLocation) {
+        getLocationByIPInfo()
+            .then(({ lat, lon }) => fetchWeatherData(lat, lon))
+            .catch(error => {
+                alert(error.message);
+            });
+    } else {
+        if (!street || !city || !state) {
+            alert('Please provide a valid street, city, and state.');
+            return;
+        }
+        getLocationByAddress(street, city, state)
+            .then(({ lat, lon }) => fetchWeatherData(lat, lon))
+            .catch(error => {
+                alert(error.message);
+            });
+    }
+}
+
+
 });
 
  // Function to display the weather card
@@ -356,3 +423,4 @@ submitButton.addEventListener('click', function(event) {
     // Add the forecast card to the forecastCardsContainer
     resultDiv.innerHTML += forecastCard;
 }
+
