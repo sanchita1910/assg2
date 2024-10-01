@@ -170,7 +170,7 @@ submitButton.addEventListener('click', function(event) {
         } else {
 
             resultDiv.innerHTML = `
-    
+               <div id="first-card">
                 <div class="weather-card">
                     <div class="place">${data.location}</div>
                     <div class="main-info">
@@ -217,9 +217,11 @@ submitButton.addEventListener('click', function(event) {
                         </div>
                     </div>
                 </div>
+                </div>
             `;
 
             let dailyForecastTable = `
+            <div id="daily-forecast-table-container">
             <div class="weather-table">
                 <table class="forecast-table">
                     <thead>
@@ -232,7 +234,7 @@ submitButton.addEventListener('click', function(event) {
                         </tr>
                     </thead>
                     <tbody>
-                </div>
+            </div>
             `;
 
             data.daily_forecast.forEach((day, index) => {
@@ -246,7 +248,7 @@ submitButton.addEventListener('click', function(event) {
                     day: '2-digit'   
                 });
                 dailyForecastTable += `
-                    <tr class="weather-data-row" onClick="displayWeatherCard(${index}, JSON.stringify(day))">
+                    <tr class="weather-data-row" onClick="displayWeatherCard('${formattedDate}', '${day.weatherDescription}', ${day.temperature_high}, ${day.temperature_low}, ${day.windSpeed}, ${day.precipitationProbability}, ${day.precipitationType}, ${day.visibility}, ${day.humidity}, '${day.sunriseTime}',' ${day.sunsetTime}', '${day.weathericonlocation}')">
                         <td>${formattedDate}</td>
                         <td> 
                         <div class="status-container">
@@ -266,6 +268,7 @@ submitButton.addEventListener('click', function(event) {
             dailyForecastTable += `
                     </tbody>
                 </table>
+            </div>
             `;
 
             resultDiv.innerHTML += dailyForecastTable;
@@ -278,35 +281,78 @@ submitButton.addEventListener('click', function(event) {
 });
 
  // Function to display the weather card
- function displayWeatherCard(index, data) {
-    const selectedDay = data.daily_forecast[index];  // Retrieve the corresponding day using the index
+ function displayWeatherCard(formattedDate, weatherDescription, temperature_high, temperature_low, windSpeed, precipitationProbability, precipitationType, visibility, humidity, sunriseTime, sunsetTime, weathericonlocation) {
+    const selectedDay = {
+        formattedDate,
+        weatherDescription,
+        temperature_high,
+        temperature_low,
+        windSpeed,
+        precipitationProbability,
+        precipitationType,
+        visibility,
+        humidity,
+        sunriseTime,
+        sunsetTime,
+        weathericonlocation
+    }; // Retrieve the corresponding day using the index
+
+      //Hide the daily first weather card and  forecast table
+      const dailyForecastTableContainer = document.getElementById('daily-forecast-table-container');
+      dailyForecastTableContainer.style.display = 'none';
+      const firstCard = document.getElementById('first-card');
+      firstCard.style.display = 'none';
 
     // Create the card for the selected day's weather
-    const forecastCard = `
-        <div class="weather-card">
-            <div class="place">${data.location} - Forecast for ${new Date(selectedDay.date).toLocaleDateString('en-US', {weekday: 'long', year: 'numeric', month: 'long', day: '2-digit'})}</div>
-            <div class="main-info">
-                <div class="icon-desc">
-                    <div>
-                        <img class="icon-img" src="${selectedDay.weathericonlocation}"> <!-- Use the correct daily forecast icon -->
-                    </div>
-                    <div class="condition">${selectedDay.weatherDescription}</div>
-                </div>
-                <div class="temperature">
-                    <span class="temp-value">${selectedDay.temperature_high.toFixed(1)}</span>° / 
-                    <span class="temp-value">${selectedDay.temperature_low.toFixed(1)}</span>°
-                </div>
+    // need location from above function
+
+    const forecastCard =`
+        <div class="weather-card-2">
+    <div class="wc-date">
+        <span class="wc-day">  ${formattedDate}</span>
+    </div>
+    <div class="wc-main-info">
+        <div class="wc-icon-desc">
+            <div class="wc-weather-icon">
+               <img src="${weathericonlocation}"
             </div>
-            <div class="details">
-                <div class="detail-item">
-                    <span class="detail-label">Wind Speed</span>
-                    <img class="detail-img" src="Images/Wind_Speed.png"> 
-                    <span class="detail-value">${selectedDay.windSpeed.toFixed(2)} mph</span>
-                </div>
-            </div>
+            <div class="wc-condition">${selectedDay.weatherDescription}</div>
         </div>
+        <div class="wc-temperature">
+            <span class="wc-temp-value">${selectedDay.temperature_high.toFixed(1)}</span> °F/ 
+            <span class="wc-temp-value">${selectedDay.temperature_low.toFixed(1)}</span>°F
+        </div>
+    </div>
+    <div class="wc-details">
+        <div class="wc-detail-item">
+            <span class="wc-detail-label">Precipitation: </span>
+            <span class="wc-detail-value">${precipitationProbability}% </span>
+        </div>
+        <div class="wc-detail-item">
+            <span class="wc-detail-label">Chance of Rain: </span>
+            <span class="wc-detail-value"> ${precipitationType}</span>
+        </div>
+        <div class="wc-detail-item">
+            <span class="wc-detail-label">Wind Speed: </span>
+            <span class="wc-detail-value">${selectedDay.windSpeed.toFixed(2)} mph</span>
+        </div>
+        <div class="wc-detail-item">
+            <span class="wc-detail-label">Humidity: </span>
+            <span class="wc-detail-value">${humidity}% </span>
+        </div>
+        <div class="wc-detail-item">
+            <span class="wc-detail-label">Visibility: </span>
+            <span class="wc-detail-value">${visibility}% </span>
+        </div>
+        <div class="wc-detail-item">
+            <span class="wc-detail-label">Sunrise/Sunset: </span>
+            <span class="wc-detail-value">${sunriseTime}/${sunsetTime}</span>
+        </div>
+    </div>
+</div>
+
     `;
 
     // Add the forecast card to the forecastCardsContainer
-    document.getElementById('forecastCardsContainer').innerHTML += forecastCard;
+    resultDiv.innerHTML += forecastCard;
 }

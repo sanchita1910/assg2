@@ -168,6 +168,7 @@ def get_weather():
                 "visibility": min(interval['values']['visibility'] for interval in daily_intervals),
                 "sunriseTime": sunrise_time,
                 "sunsetTime": sunset_time,
+                "precipitationType": max(interval['values']['precipitationType'] for interval in daily_intervals),
                 "weathericonlocation": weather_condition["iconlocation"],
                 "weatherDescription": weather_condition["description"]
 
