@@ -231,8 +231,10 @@ label {
 /* Forecast Table Styling */
 .forecast-table {
     width: 750px;
-    border-collapse: collapse;
+    /* border-collapse: collapse; */
     margin-top: 20px;
+    border-collapse: separate;
+    border-spacing: 0 10px;
 }
 
 .forecast-table th {
@@ -283,6 +285,8 @@ label {
 }
 .weather-data-row{
     height: 60px;
+    background-color: white;
+    cursor: pointer;
 }
 .status{
     display: flex;

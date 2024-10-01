@@ -152,17 +152,16 @@ submitButton.addEventListener('click', function(event) {
    
 
   // Function to send data to Flask backend
-    function fetchWeatherData(lat, lon, street, city, state, useLocation) {
-    const params = new URLSearchParams({ lat, lon, street, city,state });
+    async function fetchWeatherData(lat, lon, street, city, state) {
+    const params = new URLSearchParams({ lat, lon, street, city, state });
 
-    fetch(`http://127.0.0.1:5000/weather?${params.toString()}`, {
+    const response =  await fetch(`http://127.0.0.1:5000/weather?${params.toString()}`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
         }
     })
-    .then(response => response.json())
-    .then(data => {
+    const data = await response.json()
         // Clear previous results
         resultDiv.innerHTML = '';
 
@@ -176,7 +175,7 @@ submitButton.addEventListener('click', function(event) {
             resultDiv.innerHTML = `
                <div id="first-card">
                 <div class="weather-card">
-                    <div class="place">${data.location}</div>
+                    <div class="place" id="first-card-loc"></div>
                     <div class="main-info">
                     <div class="icon-desc">
                     <div>
@@ -252,7 +251,7 @@ submitButton.addEventListener('click', function(event) {
                     day: '2-digit'   
                 });
                 dailyForecastTable += `
-                    <tr class="weather-data-row" onClick="displayWeatherCard('${formattedDate}', '${day.weatherDescription}', ${day.temperature_high}, ${day.temperature_low}, ${day.windSpeed}, ${day.precipitationProbability}, ${day.precipitationType}, ${day.visibility}, ${day.humidity}, '${day.sunriseTime}',' ${day.sunsetTime}', '${day.weathericonlocation}')">
+                    <tr class="weather-data-row" onClick="displayWeatherCard('${formattedDate}', '${day.weatherDescription}', ${day.temperature_high}, ${day.temperature_low}, ${day.windSpeed}, ${day.precipitationProbability}, ${day.precipitationType}, ${day.visibility}, ${day.humidity}, '${day.sunriseTime}',' ${day.sunsetTime}', '${day.weathericonlocation}', '${date.toISOString()}')">
                         <td>${formattedDate}</td>
                         <td> 
                         <div class="status-container">
@@ -277,11 +276,6 @@ submitButton.addEventListener('click', function(event) {
 
             resultDiv.innerHTML += dailyForecastTable;
         }
-    })
-    .catch(error => {
-        alert("Error fetching weather data. Please try again.");
-        console.error('Error:', error);
-    });
 }
 
 // Function to get location using IPInfo API
@@ -291,7 +285,8 @@ function getLocationByIPInfo() {
         .then(response => response.json())
         .then(data => {
             const [lat, lon] = data.loc.split(',');
-            return { lat, lon };
+            const weather_loc = data.city +"," + data.region;
+            return { lat, lon, weather_loc };
         })
         .catch(error => {
             console.error('Error fetching location from IPInfo:', error);
@@ -312,7 +307,8 @@ function getLocationByAddress(street, city, state) {
                 throw new Error('Geocoding failed. Check your address.');
             }
             const { lat, lng } = data.results[0].geometry.location;
-            return { lat, lon: lng };
+            const weather_loc = data.results[0].formatted_address;
+            return { lat, lon: lng, weather_loc };
         })
         .catch(error => {
             console.error('Error fetching location from Google Geocoding:', error);
@@ -323,32 +319,31 @@ function getLocationByAddress(street, city, state) {
 
 
 // Function to handle location-based weather fetching
-function fetchWeather(useLocation, street, city, state) {
-
+ async function fetchWeather(useLocation, street, city, state) {
+let weather_location;
     if (useLocation) {
-        getLocationByIPInfo()
-            .then(({ lat, lon }) => fetchWeatherData(lat, lon))
-            .catch(error => {
-                alert(error.message);
-            });
+       const  { lat, lon, weather_loc } = await getLocationByIPInfo()
+             await fetchWeatherData(lat, lon)
+             weather_location = weather_loc;
+            
     } else {
         if (!street || !city || !state) {
             alert('Please provide a valid street, city, and state.');
             return;
         }
-        getLocationByAddress(street, city, state)
-            .then(({ lat, lon }) => fetchWeatherData(lat, lon))
-            .catch(error => {
-                alert(error.message);
-            });
+        const { lat, lon, weather_loc } = await getLocationByAddress(street, city, state)
+            await fetchWeatherData(lat, lon)
+            weather_location = weather_loc;     
     }
+    const first_card_loc = document.getElementById("first-card-loc")
+    first_card_loc.innerHTML = weather_location;
 }
 
 
 });
 
  // Function to display the weather card
- function displayWeatherCard(formattedDate, weatherDescription, temperature_high, temperature_low, windSpeed, precipitationProbability, precipitationType, visibility, humidity, sunriseTime, sunsetTime, weathericonlocation) {
+ function displayWeatherCard(formattedDate, weatherDescription, temperature_high, temperature_low, windSpeed, precipitationProbability, precipitationType, visibility, humidity, sunriseTime, sunsetTime, weathericonlocation, date) {
     const selectedDay = {
         formattedDate,
         weatherDescription,
@@ -361,7 +356,8 @@ function fetchWeather(useLocation, street, city, state) {
         humidity,
         sunriseTime,
         sunsetTime,
-        weathericonlocation
+        weathericonlocation,
+        date
     }; // Retrieve the corresponding day using the index
 
       //Hide the daily first weather card and  forecast table
@@ -422,5 +418,57 @@ function fetchWeather(useLocation, street, city, state) {
 
     // Add the forecast card to the forecastCardsContainer
     resultDiv.innerHTML += forecastCard;
+
+    // chart 1 
+    ;(async () => {
+        const data = await fetch(
+          "https://www.highcharts.com/samples/data/range.json",
+        ).then((response) => response.json())
+      
+        Highcharts.chart("chart1", {
+          chart: {
+            type: "arearange",
+            zooming: {
+              type: "x",
+            },
+            scrollablePlotArea: {
+              minWidth: 600,
+              scrollPositionX: 1,
+            },
+          },
+          title: {
+            text: "Temperature variation by day",
+          },
+          xAxis: {
+            type: "datetime",
+            tickInterval: 24 * 3600 * 1000, // one day
+          },
+          yAxis: {
+            title: {
+              text: null,
+            },
+          },
+          tooltip: {
+            crosshairs: true,
+            shared: true,
+            valueSuffix: "°C",
+            xDateFormat: "%A, %b %e",
+          },
+          legend: {
+            enabled: false,
+          },
+          series: [
+            {
+              name: "Temperatures",
+              data: data.slice(0,7),
+              pointStart: Date.UTC(
+                new Date().getUTCFullYear(),
+                new Date().getUTCMonth(),
+                new Date().getUTCDate() - 6,
+              ),
+            },
+          ],
+        })
+      })() 
 }
 
